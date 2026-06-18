@@ -15,15 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Log in to Docker Hub (Optional)
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -35,8 +27,8 @@ jobs:
           context: ./backend
           push: true
           tags: |
-            ghcr.io/vasudev93115/stockflow-backend:latest
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/stockflow-backend:latest', secrets.DOCKERHUB_USERNAME) || '' }}
+            vasudev93115/stockflow-backend:latest
+            vasudev93115/stockflow-backend:${{ github.sha }}
 
       - name: Build and push Frontend Docker image
         uses: docker/build-push-action@v5
@@ -46,5 +38,5 @@ jobs:
           build-args: |
             VITE_API_URL=http://localhost:8000
           tags: |
-            ghcr.io/vasudev93115/stockflow-frontend:latest
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/stockflow-frontend:latest', secrets.DOCKERHUB_USERNAME) || '' }}
+            vasudev93115/stockflow-frontend:latest
+            vasudev93115/stockflow-frontend:${{ github.sha }}
