@@ -36,6 +36,16 @@ app.include_router(orders.router, prefix="/orders", tags=["Orders"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 
 
+@app.get("/")
+def read_root():
+    return {
+        "message": "Welcome to StockFlow API",
+        "documentation": "/docs",
+        "health": "/health"
+    }
+
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "service": "StockFlow API"}
+
