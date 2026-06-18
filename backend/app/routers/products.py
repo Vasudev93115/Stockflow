@@ -3,21 +3,26 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.database.connection import get_db
-from app.models.models import Product
+from app.models.models import Product, User
 from app.schemas.schemas import ProductCreate, ProductResponse, ProductUpdate
+from app.routers.auth import get_current_user
 
 router = APIRouter()
 
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
-def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+def create_product(
+    product: ProductCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     existing = db.query(Product).filter(Product.sku == product.sku).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Product with SKU '{product.sku}' already exists"
         )
-    db_product = Product(**product.model_dump())
+    db_product = Product(user_id=current_user.id, **product.model_dump())
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
@@ -25,21 +30,35 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=List[ProductResponse])
-def get_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return db.query(Product).offset(skip).limit(limit).all()
+def get_products(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return db.query(Product).filter(Product.user_id == current_user.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
-def get_product(product_id: int, db: Session = Depends(get_db)):
-    product = db.query(Product).filter(Product.id == product_id).first()
+def get_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    product = db.query(Product).filter(Product.id == product_id, Product.user_id == current_user.id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
 
 @router.put("/{product_id}", response_model=ProductResponse)
-def update_product(product_id: int, updates: ProductUpdate, db: Session = Depends(get_db)):
-    product = db.query(Product).filter(Product.id == product_id).first()
+def update_product(
+    product_id: int,
+    updates: ProductUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    product = db.query(Product).filter(Product.id == product_id, Product.user_id == current_user.id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     for field, value in updates.model_dump(exclude_unset=True).items():
@@ -51,9 +70,14 @@ def update_product(product_id: int, updates: ProductUpdate, db: Session = Depend
 
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product(product_id: int, db: Session = Depends(get_db)):
-    product = db.query(Product).filter(Product.id == product_id).first()
+def delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    product = db.query(Product).filter(Product.id == product_id, Product.user_id == current_user.id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     db.delete(product)
     db.commit()
+

@@ -1,3 +1,5 @@
+import { useAuth } from "../../context/AuthContext";
+
 const NAV = [
   {
     label: "Overview",
@@ -52,6 +54,8 @@ const NAV = [
 ];
 
 export default function Sidebar({ activePage, setActivePage, isOpen, onClose }) {
+  const { user, logout } = useAuth();
+
   return (
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
@@ -84,9 +88,24 @@ export default function Sidebar({ activePage, setActivePage, isOpen, onClose }) 
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-version">v1.0.0 · StockFlow</div>
+          <div className="user-profile-widget">
+            <div className="user-avatar">
+              {user?.username ? user.username[0].toUpperCase() : "U"}
+            </div>
+            <div className="user-details">
+              <span className="user-name">{user?.username}</span>
+              <span className="user-email">{user?.email}</span>
+            </div>
+            <button className="logout-btn" onClick={logout} title="Sign Out">
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+              </svg>
+            </button>
+          </div>
+          <div className="sidebar-version">v1.1.0 · StockFlow</div>
         </div>
       </aside>
     </>
   );
 }
+

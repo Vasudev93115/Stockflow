@@ -116,3 +116,30 @@ class DashboardStats(BaseModel):
     total_orders: int
     total_revenue: float
     low_stock_products: List[ProductResponse]
+
+
+# ── User Schemas ─────────────────────────────────────────────────────────────
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+
